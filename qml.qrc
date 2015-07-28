@@ -2,5 +2,11 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>MainForm.ui.qml</file>
+        <file>components/Dial.qml</file>
+        <file>images/background.png</file>
+        <file>images/needle_shadow.png</file>
+        <file>images/needle.png</file>
+        <file>images/overlay.png</file>
+        <file>images/bg320x640.png</file>
     </qresource>
 </RCC>

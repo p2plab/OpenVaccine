@@ -1,13 +1,17 @@
 TEMPLATE = app
 
-QT += qml quick
+QT += core network positioning qml quick svg xml
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    appmodel.cpp
 
 RESOURCES += qml.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
+QML_IMPORT_PATH = components
 
 # Default rules for deployment.
 include(deployment.pri)
+
+HEADERS += \
+    appmodel.h
