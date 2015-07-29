@@ -1,93 +1,172 @@
 import QtQuick 2.4
 import QtQuick.Controls 1.3
 import QtQuick.Extras 1.4
-import QtWebView 1.1
+import QtQuick.Layouts 1.2
 import "components"
 
-Rectangle {
-    id: rectangle1
-    //property alias mouseArea: mouseArea
 
-    width: 320
-    height: 640
+ColumnLayout {
+    id: mainLayout
+    anchors.fill: parent
+    anchors.margins: margin
 
-    Text {
-        id: title
-        anchors.centerIn: parent
-        text: "오픈 백신"
-        style: Text.Normal
-        font.pointSize: 28
-        font.italic: false
-        font.bold: false
-        horizontalAlignment: Text.AlignHCenter
-        anchors.verticalCenterOffset: -271
-        anchors.horizontalCenterOffset: 1
-    }
+//    GroupBox {
+//        id: rowBox
+//        title: "Row layout"
+//        Layout.fillWidth: true
 
-    Dial {
-        id: dial
-        x: 63
-        y: 123
-        width: 197
-        height: 210
-        value: 60
-    }
-
-    DelayButton {
-        id: scan
-        x: 22
-        y: 380
-        width: 126
-        height: 92
-        text: qsTr("검사 시작")
-        delay: 20
-    }
-
-    Grid {
-        id: grid1
-        x: 0
-        y: 523
-        width: 320
-        height: 77
-        spacing: 2
-        rows: 3
-        columns: 3
-
-        Label {
-            id: versioinTitle
-            text: qsTr("엔진 버전")
+        RowLayout {
+            id: rowLayout
+            anchors.fill: parent
+            TextField {
+                placeholderText: "This wants to grow horizontally"
+                Layout.fillWidth: true
+            }
+            Button {
+                text: "Button"
+            }
         }
+//    }
 
-        Label {
-            id: versionValue
-            text: qsTr("2015.07.06")
-        }
+    GroupBox {
+        id: gridBox
+        title: "Grid layout"
+        Layout.fillWidth: true
 
-        Button {
-            id: button1
-            text: qsTr("업데이트")
-        }
+        GridLayout {
+            id: gridLayout
+            rows: 3
+            flow: GridLayout.TopToBottom
+            anchors.fill: parent
 
-        Label {
-            id: realtimeScan
-            text: qsTr("실시간 감시")
-        }
+            Label { text: "Line 1" }
+            Label { text: "Line 2" }
+            Label { text: "Line 3" }
 
-        Label {
-            id: label1
-            text: qsTr("사용안함")
+            TextField { }
+            TextField { }
+            TextField { }
+
+            TextArea {
+                text: "This widget spans over three rows in the GridLayout.\n"
+                    + "All items in the GridLayout are implicitly positioned from top to bottom."
+                Layout.rowSpan: 3
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
         }
     }
-
-    ToggleButton {
-        id: toggleButton1
-        x: 185
-        y: 380
-        width: 111
-        height: 92
-        text: qsTr("실시간 감시")
+    TextArea {
+        id: t3
+        text: "This fills the whole cell"
+        Layout.minimumHeight: 30
+        Layout.fillHeight: true
+        Layout.fillWidth: true
     }
-
-
-
 }
+
+
+//Item {
+//    anchors.fill: parent
+
+//    property alias updateButton: updateButton
+//    property alias watchButton: watchButton
+//    property alias scanButton: scanButton
+//    property alias mainLayout: mainLayout
+//    ColumnLayout {
+//        id: mainLayout
+//        anchors.fill: parent
+//        Text {
+//            id: title
+//            x: 108
+//            y: 24
+//            text: "오픈 백신(베타)"
+//            anchors.horizontalCenter: parent.horizontalCenter
+//            style: Text.Normal
+//            font.pointSize: 28
+//            font.italic: false
+//            font.bold: false
+//            horizontalAlignment: Text.AlignHCenter
+//        }
+//        Item {
+//            x: 62
+//            y: 125
+//            width: 197
+//            height: 210
+//            anchors.horizontalCenter: parent.horizontalCenter
+
+//            Dial {
+//                id: dial
+//                value: 60
+//                anchors.centerIn: parent
+////                value: slider.x * 100 / (container.width - 32)
+//            }
+//        }
+
+//        Row {
+//            id: row3
+//            x: 0
+//            y: 420
+//            width: 280
+//            height: 120
+//            anchors.horizontalCenter: parent.horizontalCenter
+
+//            DelayButton {
+//                id: scanButton
+//                y: 0
+//                width: 126
+//                height: 92
+//                text: qsTr("검사 시작")
+//                anchors.left: parent.left
+//                anchors.leftMargin: 0
+//                delay: 14
+//            }
+
+//            ToggleButton {
+//                id: watchButton
+//                x: 0
+//                y: 0
+//                width: 116
+//                height: 92
+//                text: qsTr("실시간 감시")
+//                anchors.right: parent.right
+//                anchors.rightMargin: 0
+//                clip: false
+//                checked: false
+//            }
+//        }
+
+//        Row {
+//            id: row4
+//            x: 17
+//            y: 519
+//            width: 287
+//            height: 42
+//            anchors.horizontalCenter: parent.horizontalCenter
+
+//            Button {
+//                id: updateButton
+//                text: qsTr("업데이트")
+//                anchors.right: parent.right
+//                anchors.rightMargin: 0
+//                anchors.verticalCenter: parent.verticalCenter
+//            }
+
+//            Label {
+//                id: versionValue
+//                text: qsTr("2015.07.06")
+//                anchors.horizontalCenter: parent.horizontalCenter
+//                anchors.verticalCenter: parent.verticalCenter
+//            }
+
+//            Label {
+//                id: versioinTitle
+//                text: qsTr("엔진 버전")
+//                anchors.left: parent.left
+//                anchors.leftMargin: 0
+//                anchors.verticalCenter: parent.verticalCenter
+//            }
+
+//        }
+//    }
+//}
