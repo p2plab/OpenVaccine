@@ -1,14 +1,14 @@
 import QtQuick 2.4
 import QtQuick.Window 2.2
-import QtQuick.Controls 1.2
+import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
 
 ApplicationWindow {
     property int margin: 11
     width: mainLayout.implicitWidth + 2 * margin
     height: mainLayout.implicitHeight + 2 * margin
-    minimumWidth: mainLayout.Layout.minimumWidth + 2 * margin
-    minimumHeight: mainLayout.Layout.minimumHeight + 2 * margin
+//    minimumWidth: mainLayout.Layout.minimumWidth + 2 * margin
+//    minimumHeight: mainLayout.Layout.minimumHeight + 2 * margin
     visible: true
 
     MainForm {

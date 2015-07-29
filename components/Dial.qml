@@ -43,8 +43,9 @@ import QtQuick 2.0
 Item {
     id: root
     property real value : 0
+    anchors.fill: parent
+    //width: 210; height: 210
 
-    width: 210; height: 210
 
     Image { source: "../images/background.png" }
 
