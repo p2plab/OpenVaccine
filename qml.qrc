@@ -8,5 +8,9 @@
         <file>images/needle.png</file>
         <file>images/overlay.png</file>
         <file>images/bg320x640.png</file>
+        <file>images/titleBar.svg</file>
+        <file>images/titleBar_nanumgodic.svg</file>
+        <file>images/titleBar_Korean.svg</file>
+        <file>images/backgroundSvg.svg</file>
     </qresource>
 </RCC>

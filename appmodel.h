@@ -44,130 +44,87 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtNetwork/QNetworkReply>
+#include <QtQml/qqml.h>
 #include <QtQml/QQmlListProperty>
+#include <QtQml/QQmlPropertyMap>
+#include <QJsonDocument>
 
-#include <QtPositioning/QGeoPositionInfoSource>
-
-//! [0]
-class ScanData : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(QString dayOfWeek
-               READ dayOfWeek WRITE setDayOfWeek
-               NOTIFY dataChanged)
-    Q_PROPERTY(QString weatherIcon
-               READ weatherIcon WRITE setWeatherIcon
-               NOTIFY dataChanged)
-    Q_PROPERTY(QString weatherDescription
-               READ weatherDescription WRITE setWeatherDescription
-               NOTIFY dataChanged)
-    Q_PROPERTY(QString temperature
-               READ temperature WRITE setTemperature
-               NOTIFY dataChanged)
-
-public:
-    explicit ScanData(QObject *parent = 0);
-    ScanData(const ScanData &other);
-
-    QString dayOfWeek() const;
-    QString weatherIcon() const;
-    QString weatherDescription() const;
-    QString temperature() const;
-
-    void setDayOfWeek(const QString &value);
-    void setWeatherIcon(const QString &value);
-    void setWeatherDescription(const QString &value);
-    void setTemperature(const QString &value);
-
-signals:
-    void dataChanged();
-//! [0]
-private:
-    QString m_dayOfWeek;
-    QString m_weather;
-    QString m_weatherDescription;
-    QString m_temperature;
-//! [1]
-};
-//! [1]
-
-Q_DECLARE_METATYPE(ScanData)
-
-class AppModelPrivate;
-//! [2]
 class AppModel : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool ready
-               READ ready
-               NOTIFY readyChanged)
-    Q_PROPERTY(bool hasSource
-               READ hasSource
-               NOTIFY readyChanged)
-    Q_PROPERTY(bool hasValidCity
-               READ hasValidCity
-               NOTIFY cityChanged)
-    Q_PROPERTY(bool hasValidWeather
-               READ hasValidWeather
-               NOTIFY weatherChanged)
-    Q_PROPERTY(bool useGps
-               READ useGps WRITE setUseGps
-               NOTIFY useGpsChanged)
-    Q_PROPERTY(QString city
-               READ city WRITE setCity
-               NOTIFY cityChanged)
-    Q_PROPERTY(ScanData *virusData
-               READ virusData
-               NOTIFY weatherChanged)
-    Q_PROPERTY(QQmlListProperty<ScanData> forecast
-               READ forecast
-               NOTIFY weatherChanged)
+    Q_PROPERTY(int applicationWidth READ applicationWidth WRITE setApplicationWidth NOTIFY applicationWidthChanged)
+    Q_PROPERTY(bool isMobile READ isMobile CONSTANT)
+    Q_PROPERTY(QObject *colors READ colors CONSTANT)
+    Q_PROPERTY(QObject *constants READ constants CONSTANT)
+    Q_PROPERTY(bool isPortraitMode READ isPortraitMode WRITE setIsPortraitMode NOTIFY portraitModeChanged)
+    Q_PROPERTY(int currentIndexDay READ currentIndexDay WRITE setCurrentIndexDay NOTIFY currentIndexDayChanged)
+    Q_PROPERTY(qreal ratio READ ratio CONSTANT)
+    Q_PROPERTY(qreal hMargin READ hMargin NOTIFY hMarginChanged)
+    Q_PROPERTY(qreal sliderHandleWidth READ sliderHandleWidth CONSTANT)
+    Q_PROPERTY(qreal sliderHandleHeight READ sliderHandleHeight CONSTANT)
+    Q_PROPERTY(qreal sliderGapWidth READ sliderGapWidth CONSTANT)
 
 public:
-    explicit AppModel(QObject *parent = 0);
-    ~AppModel();
+    AppModel();
 
-    bool ready() const;
-    bool hasSource() const;
-    bool useGps() const;
-    bool hasValidCity() const;
-    bool hasValidWeather() const;
-    void setUseGps(bool value);
-    void hadError(bool tryAgain);
+    bool isMobile() const { return m_isMobile; }
+    QQmlPropertyMap *colors() const { return m_colors; }
+    QQmlPropertyMap *constants() const { return m_constants; }
 
-    QString city() const;
-    void setCity(const QString &value);
+    int applicationWidth() const { return m_applicationWidth; }
+    void setApplicationWidth(const int newWidth);
 
-    ScanData *virusData() const;
-    QQmlListProperty<ScanData> forecast() const;
+    int currentIndexDay() const { return m_currentIndexDay; }
+    void setCurrentIndexDay(const int index);
 
-public slots:
-    Q_INVOKABLE void refreshWeather();
+    bool isPortraitMode() const { return m_isPortraitMode; }
+    void setIsPortraitMode(const bool newMode);
 
-//! [2]
+//    ScanData currentScanData() const { return m_currentScanData; }
+
+    qreal hMargin() const { return m_hMargin; }
+    qreal ratio() const { return m_ratio; }
+    qreal sliderHandleHeight()  { return m_sliderHandleHeight; }
+    qreal sliderGapWidth()  { return m_sliderGapWidth; }
+    qreal sliderHandleWidth()  { return m_sliderHandleWidth; }
+
+    Q_INVOKABLE void queryScanData(const QString os,
+                                   const QString version,
+                                   const QString vendor,
+                                   const QString model);
+
+protected slots:
+    void notifyPortraitMode(Qt::ScreenOrientation);
+
 private slots:
-    void queryCity();
-    void networkSessionOpened();
-    void positionUpdated(QGeoPositionInfo gpsPos);
-    void positionError(QGeoPositionInfoSource::Error e);
-    // these would have QNetworkReply* params but for the signalmapper
-    void handleGeoNetworkData(QObject *networkReply);
-    void handleWeatherNetworkData(QObject *networkReply);
-    void handleForecastNetworkData(QObject *networkReply);
+    void replyFinished(QNetworkReply *reply);
 
-//! [3]
+protected:
+    qreal getSizeWithRatio(const qreal height) { return ratio() * height; }
+
 signals:
-    void readyChanged();
-    void useGpsChanged();
-    void cityChanged();
-    void weatherChanged();
-
-//! [3]
+    void applicationWidthChanged();
+    void portraitModeChanged();
+    void hMarginChanged();
+    void currentScanDataChanged();
+    void currentIndexDayChanged();
+    void foundCitiesChanged();
+    void waitForScanDataQueryReply(const QString message);
+    void errorOnQueryScanData(const QString errorMessage);
 
 private:
-    AppModelPrivate *d;
-
-//! [4]
+    int m_applicationWidth;
+    QQmlPropertyMap *m_colors;
+    QQmlPropertyMap *m_constants;
+    bool m_isPortraitMode;
+    int m_currentIndexDay;
+    QNetworkAccessManager *manager;
+    bool m_isMobile;
+    qreal m_ratio;
+    qreal m_hMargin;
+    qreal m_sliderHandleHeight, m_sliderHandleWidth, m_sliderGapWidth;
 };
+
 //! [4]
 
 #endif // APPMODEL_H
