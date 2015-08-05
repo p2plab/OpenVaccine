@@ -1,13 +1,16 @@
 TEMPLATE = app
 
-QT += core network positioning qml quick svg xml
+QT += core network positioning qml quick svg xml concurrent
 
 SOURCES += main.cpp \
-    appmodel.cpp
+    appmodel.cpp \
+    sha1.cpp
 
 RESOURCES += qml.qrc
 
-android: ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+ANDROID_EXTRA_LIBS += $$PWD/android/libs/libcrypto.so
+ANDROID_EXTRA_LIBS += $$PWD/android/libs/libssl.so
 
 OTHER_FILES += \
     android/AndroidManifest.xml
@@ -19,4 +22,6 @@ QML_IMPORT_PATH = components
 include(deployment.pri)
 
 HEADERS += \
-    appmodel.h
+    appmodel.h \
+    sha1.h \
+    bloom_filter.h

@@ -3,83 +3,148 @@ import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.2
-import "components"
+import QtQuick.Window 2.2
 
+GridLayout {
+    property alias scanButton: scanButton
+    property alias cancelButton: cancelButton
+    property alias mainLayout: mainLayout
+    property alias logger: logger
+    property alias busyIndicator: busyIndicator
 
-ColumnLayout {
     id: mainLayout
     anchors.fill: parent
     anchors.margins: margin
-    //property alias updateButton: updateButton
-    property alias watchButton: watchButton
-    property alias scanButton: scanButton
-    property alias mainLayout: mainLayout
-    //    rows: 10
-    //    columns: 1
+    columns: 1
+    rows:9
+    flow: GridLayout.TopToBottom
 
-    //spacing:2
-
-
-    RowLayout{
-        id: rowlayout1
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        BorderImage {
-            id: title
-            width: 300
-            source: "images/titleBar_nanumgodic.svg"
-            Layout.alignment: Qt.AlignCenter
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-        }
+    BorderImage {
+        id: title
+        source: "images/titleBar_nanumgodic.svg"
+        Layout.alignment: Qt.AlignCenter
+        Layout.rowSpan: 1
+        Layout.fillHeight: true
+        Layout.fillWidth: true
     }
 
-    RowLayout {
-        id: rowLayout2
-        anchors.horizontalCenter: parent.horizontalCenter
-        CircularGauge {
-            id: circularGauge
-            width: 300
-            height: 300
-            value: 0
-            anchors.horizontalCenter: parent.horizontalCenter
-            antialiasing: true
+    CircularGauge {
+        id: circularGauge
+        y: 53
+        value: appModel.currentScanPercent
+        antialiasing: true
 
-            Layout.alignment: Qt.AlignCenter
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            style: CircularGaugeStyle {
-                id: style
-                background:Image {
-                    source:"images/background.png"
-                    antialiasing: true
-                }
+        Layout.rowSpan: 4
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+
+        style: CircularGaugeStyle {
+            id: style
+            background:Image {
+                source:"images/background.png"
+                antialiasing: true
             }
         }
+
+        BusyIndicator {
+            id: busyIndicator
+            x: 117
+            y: -11
+            visible: false
+            running: false
+            anchors.centerIn: parent
+        }
     }
 
-    RowLayout {
+    GroupBox{
+        id: groupBox1
+        title:qsTr("검사:")
+        width:parent.width
+        Layout.rowSpan: 2
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+        TextArea {
+            id:logger
+            text:appModel.currentScanFile
+            anchors.fill: parent
+            activeFocusOnPress: false
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+        }
+    }
+
+    GridLayout {
         id: rowlayout4
-        width: 261
-        anchors.horizontalCenter: parent.horizontalCenter
-        DelayButton {
+        rows: 1
+        columns: 2
+        Layout.rowSpan: 1
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+        Button {
             id: scanButton
-            text: qsTr("검사 시작")
-            antialiasing: true
-            anchors.left: parent.left
-            anchors.leftMargin: 0
-            delay: 14
+            text: qsTr("검사")
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            //style:btnStyle
         }
-
-        ToggleButton {
-            id: watchButton
-            text: qsTr("실시간 감시")
-            antialiasing: true
-            anchors.right: parent.right
-            anchors.rightMargin: 0
-            clip: false
-            checked: false
+        Button {
+            id: cancelButton
+            text: qsTr("취소")
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            //style:btnStyle
         }
     }
-
+    //    ButtonStyle {
+    //        id: btnStyle
+    //        background: Rectangle {
+    //            implicitWidth: 100
+    //            implicitHeight: 25
+    //            border.width: control.activeFocus ? 2 : 1
+    //            border.color: "#888"
+    //            radius: 4
+    //            gradient: Gradient {
+    //                GradientStop { position: 0 ; color: control.pressed ? "#ccc" : "#eee" }
+    //                GradientStop { position: 1 ; color: control.pressed ? "#aaa" : "#ccc" }
+    //            }
+    //        }
+    //    }
+    //    ButtonStyle {
+    //        id: btnStyle
+    //        background: Rectangle {
+    //            implicitHeight: 22
+    //            implicitWidth: window.width / columnFactor
+    //            color: control.pressed ? "darkGray" : control.activeFocus ? "#cdd" : "#ccc"
+    //            antialiasing: true
+    //            border.color: "gray"
+    //            radius: height/2
+    //            Rectangle {
+    //                anchors.fill: parent
+    //                anchors.margins: 1
+    //                color: "transparent"
+    //                antialiasing: true
+    //                visible: !control.pressed
+    //                border.color: "#aaffffff"
+    //                radius: height/2
+    //            }
+    //        }
+    //    }
+    states: [
+        State {
+            name: "scanState"
+            PropertyChanges {
+                target: busyIndicator
+                visible: false
+                running: false
+            }
+        },
+        State {
+            name: "countState"
+            PropertyChanges {
+                target: busyIndicator
+                visible: true
+                running: true
+            }
+        }
+    ]
 }

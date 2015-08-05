@@ -49,34 +49,25 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-
-#include "appmodel.h"
+#include <QDir>
+#include <QDirIterator>
 #include <QDebug>
 
-//ScanData::ScanData()
-//{
+#if defined(Q_OS_ANDROID)
+#include <sys/cdefs.h>
+#include <sys/system_properties.h>
+#endif
 
-//}
+#include "appmodel.h"
+#include "sha1.h"
+
 
 AppModel::AppModel()
 {
-
     m_isMobile = false;
 #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS) || defined(Q_OS_BLACKBERRY)
     m_isMobile = true;
 #endif
-
-    m_colors = new QQmlPropertyMap(this);
-
-    m_colors->insert(QLatin1String("white"), QVariant("#ffffff"));
-    m_colors->insert(QLatin1String("smokeGray"), QVariant("#eeeeee"));
-    m_colors->insert(QLatin1String("paleGray"), QVariant("#d7d6d5"));
-    m_colors->insert(QLatin1String("lightGray"), QVariant("#aeadac"));
-    m_colors->insert(QLatin1String("darkGray"), QVariant("#35322f"));
-    m_colors->insert(QLatin1String("mediumGray"), QVariant("#5d5b59"));
-    m_colors->insert(QLatin1String("doubleDarkGray"), QVariant("#1e1b18"));
-    m_colors->insert(QLatin1String("blue"), QVariant("#14aaff"));
-    m_colors->insert(QLatin1String("darkBlue"), QVariant("#14148c"));
 
     m_constants = new QQmlPropertyMap(this);
     m_constants->insert(QLatin1String("isMobile"), QVariant(m_isMobile));
@@ -96,36 +87,80 @@ AppModel::AppModel()
 
     m_constants->insert(QLatin1String("rowDelegateHeight"), QVariant(getSizeWithRatio(118)));
 
-    m_currentIndexDay = -1;
+    m_currentScanFile = "";
+    m_scanCount = 0;
+
+    // initialize bloom filter
+    bloom_parameters parameters;
+    // How many elements roughly do we expect to insert?
+    parameters.projected_element_count = 1000;
+    // Maximum tolerable false positive probability? (0,1)
+    parameters.false_positive_probability = 0.0001; // 1 in 10000
+    // Simple randomizer (optional)
+    parameters.random_seed = 0xA5A5A5A5;
+    if (!parameters)
+    {
+       qCritical() << "Error - Invalid set of bloom filter parameters!";
+       qApp->exit();
+    }
+
+    parameters.compute_optimal_parameters();
+
+    //Instantiate Bloom Filter
+    m_bloomFilter = bloom_filter(parameters);
 
     if (m_isMobile)
         connect(qApp->primaryScreen(), SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)), this, SLOT(notifyPortraitMode(Qt::ScreenOrientation)));
 
-    // Search in English
-    // In order to use yr.no weather data service, refer to their terms
-    // and conditions of use. http://om.yr.no/verdata/free-weather-data/
-    QUrl searchUrl2("https://ov.p2p.or.kr/");
-    QUrlQuery query2;
-    query2.addQueryItem("spr", "eng");
-    query2.addQueryItem("redir", "/");
-    searchUrl2.setQuery(query2);
-    manager->get(QNetworkRequest(searchUrl2));
+    queryDeviceInfo();
+
+    queryScanData("android","2.2","Samsung", "Galuxy-5");
 }
 
-//void AppModel::setCurrentCityModel(CityModel *model)
-//{
-//    if (model != m_currentCityModel)
-//    {
-//        m_currentCityModel = model;
-//        emit currentCityModelChanged();
-//    }
-//}
-
-void AppModel::setCurrentIndexDay(const int index)
+void AppModel::queryDeviceInfo()
 {
-    if (index != m_currentIndexDay) {
-        m_currentIndexDay = index;
-        emit currentIndexDayChanged();
+#if defined(Q_OS_ANDROID)
+    {
+    char version[PROP_NAME_MAX+1];
+    char model[PROP_VALUE_MAX+1];
+    char name[PROP_VALUE_MAX+1];
+    char manufacturer[PROP_VALUE_MAX+1];
+
+    __system_property_get("ro.build.version.release", version);
+    __system_property_get("ro.product.model", model);
+    __system_property_get("ro.product.name", name);
+    __system_property_get("ro.product.manufacturer", manufacturer);
+
+    m_productOS = "android";
+    m_productVersion = version;
+    m_productModel = model;
+    m_productName = name;
+    m_productManufacturer = manufacturer;
+    }
+#elif defined(Q_OS_WINDOWS)
+    m_productOS = "WIN32";
+    m_productVersion ="unknow";
+    m_productModel = "unknown";
+    m_productName = "unknown";
+    m_productManufacturer = "unknown";
+#elif defined(Q_OS_DARWIN)
+    m_productOS = "DARWIN";
+    m_productVersion ="unknow";
+    m_productModel = "unknown";
+    m_productName = "unknown";
+    m_productManufacturer = "unknown";
+#else
+    Q_ASSERT(false, "", "not support os!");
+#endif
+
+}
+
+void AppModel::setCurrentScanFile(QString file)
+{
+    if (file != m_currentScanFile)
+    {
+        m_currentScanFile = file;
+        emit currentScanFileChanged(m_currentScanFile);
     }
 }
 
@@ -176,49 +211,172 @@ void AppModel::queryScanData(const QString os,
 
     // In order to use yr.no weather data service, refer to their terms
     // and conditions of use. http://om.yr.no/verdata/free-weather-data/
-    QString baseUrl("http://localhost:8080/open_vaccine_api/");
-                     http://localhost:8080/open_vaccine_api/android/2.2.1/samsung/galuxy6/scan_data
+    QString baseUrl("http://dev.p2p.or.kr:8080/open_vaccine_api/");
 
-    baseUrl.append(os);
+    // http://localhost:8080/open_vaccine_api/android/2.2.1/samsung/galuxy6/scan_data
+
+    baseUrl.append(m_productOS);
     baseUrl.append("/");
-    baseUrl.append(version);
+    baseUrl.append(m_productVersion);
     baseUrl.append("/");
-    baseUrl.append(vendor);
+    baseUrl.append(m_productManufacturer);
     baseUrl.append("/");
-    baseUrl.append(model);
+    baseUrl.append(m_productModel);
     baseUrl.append("/scan_data");
 
     QUrl searchUrl(baseUrl);
+    //manager->setConfiguration(QSslConfiguration::defaultConfiguration());
     manager->get(QNetworkRequest(searchUrl));
     waitForScanDataQueryReply(tr("Waiting for scan data, network may be slow..."));
+}
+
+int AppModel::currentScanPercent() const
+{
+    if(!m_scanCount)
+        return 0;
+    return (1.0 * m_scanCount  / m_appFiles.count()) * 100;
+}
+
+void AppModel::scanDefectFile()
+{
+    QStringList strDirs;
+    QStringList strFilters;
+
+    #if defined(Q_OS_ANDROID)
+         strFilters += "*.apk";
+         strDirs += "/";
+         //strDirs += "/system/app";
+    #elif defined(Q_OS_DARWIN64)
+         strFilters += "*.apk";
+         //strDirs += "/Applications";
+         strDirs += "/Users/yezune/projects/OV/sigdb/apks";
+         //strDirs += "/usr/local";
+         //strDir = "/";
+    #elif defined(Q_OS_LINUX)
+         strFilters += "*";
+         strDirs = "/";
+    #elif defined(Q_OS_WIN32) | defined(Q_OS_WIN64)
+         strFilters += "*.exe";
+         strFilters += "*.dll";
+         strDirs = "c:\\Program Files";
+         //strDir = "c:\\Program Files(32)";
+    #else
+        qFatal("Not Support OS!!!");
+        qApp->exit();
+    #endif
+
+    m_futureScan = QtConcurrent::run(AppModel::scanDefectFile2, this, strDirs, strFilters);
+}
+
+void AppModel::cancelScan(){
+    m_futureScan.cancel();
+    m_appFiles.clear();
+    setScanCount(0);
+}
+
+void AppModel::setScanCount(int count)
+{
+    qDebug() << "Scan Count:" << count;
+    Q_ASSERT(0 <= count);
+    m_scanCount = count;
+    emit(currentScanPercentChanged(currentScanPercent()));
+}
+
+void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList strFilters)
+ {
+     qDebug() << "scan Defect File" << strDirs << strFilters;
+
+     self->setScanCount(0);
+     self->m_appFiles.clear();
+
+     emit(self->fileCountStart());
+
+     foreach(QString dir, strDirs){
+         QDirIterator iterDir(dir, strFilters, QDir::Files | QDir::NoSymLinks, QDirIterator::Subdirectories);
+
+         while (iterDir.hasNext())
+         {
+            iterDir.next();
+            self->m_appFiles += iterDir.filePath();
+            qDebug() << "file:" << iterDir.filePath();
+         }
+     }
+
+     emit(self->fileCountComplete());
+
+     qDebug() << "app count:" << self->m_appFiles.length();
+
+     foreach(QString filePath, self->m_appFiles){
+
+        self->setCurrentScanFile(filePath);
+        std::string sha1 = SHA1::from_file(filePath.toUtf8().constData());
+
+        if(self->m_bloomFilter.contains(sha1))
+        {
+            qDebug() << "signature found! ->" << sha1.c_str();
+            self->m_defectFiles.append(filePath);
+            self->m_defectFilesSha1.append(sha1.c_str());
+        }else{
+            qDebug() << "signature not found! ->" << sha1.c_str();
+        }
+
+        self->setScanCount( self->scanCount() + 1);
+     }
+     qDebug() << "Scan Complete.";
+     qDebug() << "defect files: " << self->m_defectFiles ;
+     //emit((tr("Scan Complete: %1").arg(reply->errorString())));
 }
 
 void AppModel::replyFinished(QNetworkReply *reply)
 {
     waitForScanDataQueryReply("");
-    if (reply->request().url().query() != "spr=eng&redir=/" ) {
-        if (reply->error() != QNetworkReply::NoError) {
-            emit(errorOnQueryScanData(tr("Network error: %1").arg(reply->errorString())));
-            //m_citiesFound->addCities();
-        } else {
-            QString data = reply->readAll();
-
-            QJsonDocument jdoc( QJsonDocument::fromJson(data.toUtf8()) );
-
-            QJsonObject scanData(jdoc.object());
-            //scanData["version"];
-            //QJsonArray signatures = scanData["signatures"];
-
-            //jd.
-
-//            QRegExp regExp;
-//            regExp.setPattern("^\\[\\[.*\\],\\[\\[(.*)\\]\\]\\]$");
-//            regExp.exactMatch(data);
-//            QString foundCities = regExp.capturedTexts().at(1);
-//            QStringList citiesFound = foundCities.split(QRegExp("\\],\\["), QString::SkipEmptyParts);
-////            m_citiesFound->addCities(citiesFound);
-        }
+    QString data;
+    if (reply->error() != QNetworkReply::NoError) {
+        emit(errorOnQueryScanData(tr("Network error: %1").arg(reply->errorString())));
+        qDebug() << "Network error:" << reply->errorString();
+        data = "{\
+               \"ver\": \"0.0.1\", \
+               \"title\": \"open vaccine signature database\"\
+               \"signatures\": \
+               {\
+                 \"5f5fdcfc9de29788efa68dfc4a341fd7a17a2f30\": {\"emailId\": \"1134100\", \"fileName\": \"ServiceUpgrade.default.apk\", \"fileId\": \"546130\"}, \
+                 \"f1ff967b50dad682f53289e369b4c5c23ba73da4\": {\"emailId\": \"1134172\", \"fileName\": \"ServiceUpdate.v2.apk\", \"fileId\": \"546147\"}, \
+                 \"e0332b702fed2fdf08d439a00374d6f3e81aa506\": {\"emailId\": \"1133625\", \"fileName\": \"ServiceUpgrade.v2.apk\", \"fileId\": \"545986\"}, \
+                 \"39755ed581e87d4adcabb8c09d50112fb8fe6a3f\": {\"emailId\": \"1149302\", \"fileName\": \"AndroidUpdate.default.apk\", \"fileId\": \"556521\"}\
+               },\
+              }";
+    } else {
+       data = reply->readAll();
     }
+
+    qDebug() << "scanData:" << data;
+
+    QJsonDocument jdoc( QJsonDocument::fromJson(data.toUtf8()) );
+
+    m_scanData = jdoc.object();
+
+    qDebug() << "scanData:" << m_scanData.value("signatrues").toString();
+
+    // initialize bloom filter using sha1 signature
+
+    if(m_scanData.contains("signatures")){
+        if(m_scanData["signatures"].isObject()){
+
+            QJsonValue sigs = m_scanData.value(QString("signatures"));
+            QStringList keys = sigs.toObject().keys();
+
+            foreach(QString sha1_key, keys){
+                qDebug() << "sha1_key:" << sha1_key;
+                m_bloomFilter.insert(std::string(sha1_key.toUtf8().constData()));
+            }
+
+        }else{
+            Q_ASSERT(false);
+        }
+    }else{
+        Q_ASSERT(false);
+    }
+
     if (reply) {
         reply->deleteLater();
         reply = 0;

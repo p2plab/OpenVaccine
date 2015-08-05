@@ -13,7 +13,27 @@ ApplicationWindow {
     MainForm {
           id: mainLayout
           anchors.fill: parent
+          scanButton.onClicked: {
+              log("검사 대상 파일 탐색중...")
+              console.log("scan...")
+              state = "scanState"
+              appModel.scanDefectFile();
+//              scanButton.enabled = false;
+//              cancelButton.enabled = true;
+          }
+          cancelButton.onClicked: {
+              log("검사 취소")
+              console.log("cancel...")
+              appModel.cancelScan();
+//              scanButton.enabled = true;
+//              cancelButton.enabled = false;
+          }
+          function log(msg){
+              mainLayout.logger.text = msg;
+          }
     }
+
+
 
     menuBar: MenuBar {
         Menu {
@@ -22,14 +42,9 @@ ApplicationWindow {
                 text: qsTr("&About")
                 onTriggered: messageDialog.show(qsTr("Scan action triggered"));
             }
-
-            MenuItem {
-                text: qsTr("&About2")
-                onTriggered: messageDialog.show(AppModel.isMobile);
-            }
             MenuItem {
                 text: qsTr("&Scan")
-                onTriggered: appModel.queryScanData("android","2.2","samsung","galuxy 6");
+                onTriggered: appModel.scanDefectFile();
             }
             MenuItem {
                 text: qsTr("E&xit")
@@ -40,13 +55,46 @@ ApplicationWindow {
 
     AppModel {
         id: appModel
+        onCurrentScanPercentChanged: percentChanged(percent);
+
+        function percentChanged(percent){
+            console.log("percent:",percent);
+            if(percent === 100){
+                if (appModel.defectCount === 0){
+                    messageDialog.show(qsTr("검사 완료!"), qsTr("해킹팀 감시코드가 검출되지 않았습니다."));
+                }else{
+                    messageDialog.show(qsTr("검사 완료!"), qsTr("해킹팀 감시코드가 검출되었습니다!"));
+                    mainLayout.log(appModel.defectFiles[0]);
+                }
+
+//                scanButton.enabled = true;
+//                cancelButton.enabled = false;
+            }
+        }
+        onCurrentScanFileChanged:changeFile();
+
+        function changeFile(){
+            console.log("change File",currentScanFile);
+            mainLayout.log(currentScanFile);
+        }
+
+        onFileCountStart:{
+            //messageDialog.show("count State")
+            mainLayout.state = "countState"
+        }
+        onFileCountComplete:{
+            //messageDialog.show("scan State")
+            mainLayout.state = "scanState"
+        }
     }
 
     MessageDialog {
         id: messageDialog
         title: "알림"
-        function show(caption) {
-            messageDialog.text = caption;
+        text:""
+        function show(caption,msg) {
+            messageDialog.title = caption
+            messageDialog.text = msg;
             messageDialog.open();
         }
     }
@@ -54,7 +102,7 @@ ApplicationWindow {
     Dialog {
         id: aboutDialog
         title: qsTr("About Open Vaccine")
-        Text {
+        TextArea {
             id: text1
             x: 33
             y: 205

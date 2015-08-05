@@ -48,39 +48,53 @@
 #include <QtQml/QQmlListProperty>
 #include <QtQml/QQmlPropertyMap>
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <qtconcurrentrun.h>
+#include "bloom_filter.h"
+
 
 class AppModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int applicationWidth READ applicationWidth WRITE setApplicationWidth NOTIFY applicationWidthChanged)
     Q_PROPERTY(bool isMobile READ isMobile CONSTANT)
-    Q_PROPERTY(QObject *colors READ colors CONSTANT)
+    Q_PROPERTY(int defectCount READ defectCount CONSTANT)
+    Q_PROPERTY(QStringList defectFiles READ defectFiles() CONSTANT)
     Q_PROPERTY(QObject *constants READ constants CONSTANT)
     Q_PROPERTY(bool isPortraitMode READ isPortraitMode WRITE setIsPortraitMode NOTIFY portraitModeChanged)
-    Q_PROPERTY(int currentIndexDay READ currentIndexDay WRITE setCurrentIndexDay NOTIFY currentIndexDayChanged)
     Q_PROPERTY(qreal ratio READ ratio CONSTANT)
     Q_PROPERTY(qreal hMargin READ hMargin NOTIFY hMarginChanged)
     Q_PROPERTY(qreal sliderHandleWidth READ sliderHandleWidth CONSTANT)
     Q_PROPERTY(qreal sliderHandleHeight READ sliderHandleHeight CONSTANT)
     Q_PROPERTY(qreal sliderGapWidth READ sliderGapWidth CONSTANT)
+    Q_PROPERTY(QString currentScanFile READ currentScanFile WRITE setCurrentScanFile NOTIFY currentScanFileChanged)
+    Q_PROPERTY(int currentScanPercent READ currentScanPercent NOTIFY currentScanPercentChanged)
+    Q_PROPERTY(NOTIFY fileCountComplete)
+    Q_PROPERTY(NOTIFY fileCountStart)
 
 public:
     AppModel();
 
     bool isMobile() const { return m_isMobile; }
-    QQmlPropertyMap *colors() const { return m_colors; }
+
+    int defectCount() const { return m_defectFiles.length(); }
+    const QStringList & defectFiles() const { return m_defectFiles; }
+
     QQmlPropertyMap *constants() const { return m_constants; }
 
     int applicationWidth() const { return m_applicationWidth; }
     void setApplicationWidth(const int newWidth);
 
-    int currentIndexDay() const { return m_currentIndexDay; }
-    void setCurrentIndexDay(const int index);
+    QString currentScanFile() const { return m_currentScanFile; }
+    void setCurrentScanFile(const QString file);
+
+    Q_INVOKABLE void scanDefectFile();
+    Q_INVOKABLE void cancelScan();
+
+    static void scanDefectFile2(AppModel *self, QStringList strDirs, QStringList strFilters);
 
     bool isPortraitMode() const { return m_isPortraitMode; }
     void setIsPortraitMode(const bool newMode);
-
-//    ScanData currentScanData() const { return m_currentScanData; }
 
     qreal hMargin() const { return m_hMargin; }
     qreal ratio() const { return m_ratio; }
@@ -88,10 +102,17 @@ public:
     qreal sliderGapWidth()  { return m_sliderGapWidth; }
     qreal sliderHandleWidth()  { return m_sliderHandleWidth; }
 
+    int currentScanPercent() const;
+    int scanCount(){ return m_scanCount; }
+    void setScanCount(int count);
+
+    void queryDeviceInfo();
+
     Q_INVOKABLE void queryScanData(const QString os,
                                    const QString version,
                                    const QString vendor,
                                    const QString model);
+    const QStringList & appFiles() { return m_appFiles; }
 
 protected slots:
     void notifyPortraitMode(Qt::ScreenOrientation);
@@ -106,23 +127,40 @@ signals:
     void applicationWidthChanged();
     void portraitModeChanged();
     void hMarginChanged();
-    void currentScanDataChanged();
-    void currentIndexDayChanged();
+    void currentScanFileChanged(const QString fileName);
+    void currentScanPercentChanged(int percent);
     void foundCitiesChanged();
     void waitForScanDataQueryReply(const QString message);
     void errorOnQueryScanData(const QString errorMessage);
+    void fileCountComplete();
+    void fileCountStart();
 
 private:
     int m_applicationWidth;
-    QQmlPropertyMap *m_colors;
     QQmlPropertyMap *m_constants;
     bool m_isPortraitMode;
-    int m_currentIndexDay;
-    QNetworkAccessManager *manager;
     bool m_isMobile;
     qreal m_ratio;
     qreal m_hMargin;
     qreal m_sliderHandleHeight, m_sliderHandleWidth, m_sliderGapWidth;
+
+    QNetworkAccessManager *manager;
+
+    int m_scanCount;
+    QString m_currentScanFile;
+    QStringList m_appFiles;
+    QStringList m_defectFiles;
+    QStringList m_defectFilesSha1;
+    QJsonObject m_scanData;
+
+    QString m_productOS;
+    QString m_productModel;
+    QString m_productName;
+    QString m_productVersion;
+    QString m_productManufacturer;
+
+    QFuture<void> m_futureScan;
+    bloom_filter m_bloomFilter;
 };
 
 //! [4]

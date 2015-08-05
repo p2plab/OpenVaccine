@@ -3,6 +3,8 @@
 #include <QtGui/QGuiApplication>
 #include <QQmlApplicationEngine>
 
+#include <QSslSocket>
+
 #include "appmodel.h"
 
 int main(int argc, char *argv[])
@@ -12,12 +14,14 @@ int main(int argc, char *argv[])
     const char *uri = "org.p2plab.openvaccine";
     qmlRegisterType<AppModel>(uri, 1, 0, "AppModel");
 
-    //! [0]
-//    qRegisterMetaType<ScanData>();
-    //! [1]
-
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
+
+    if(QSslSocket::supportsSsl()){
+        qDebug() << "SSL supported!";
+    }else{
+        qDebug() << "SSL not supported!";
+    }
 
     return app.exec();
 }
