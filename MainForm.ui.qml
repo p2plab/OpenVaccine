@@ -28,6 +28,7 @@ GridLayout {
         Layout.rowSpan: 1
         Layout.fillHeight: true
         Layout.fillWidth: true
+        antialiasing: true
     }
 
     CircularGauge {
@@ -70,7 +71,7 @@ GridLayout {
             textColor: "#eee"
             selectionColor: "steelblue"
             selectedTextColor: "#eee"
-            backgroundColor: "#000"
+            backgroundColor: "#888"
         }
     }
     GridLayout {
@@ -133,7 +134,6 @@ GridLayout {
             }
         }
     }
-
 
     states: [
         State {

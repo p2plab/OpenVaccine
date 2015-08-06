@@ -358,27 +358,33 @@ void AppModel::replyFinished(QNetworkReply *reply)
         emit(errorOnQueryScanData(tr("Network error: %1").arg(reply->errorString())));
         qDebug() << "Network error:" << reply->errorString();
         data = "{\
-               \"ver\": \"0.0.1\", \
-               \"title\": \"open vaccine signature database\"\
-               \"signatures\": \
-               {\
-                 \"5f5fdcfc9de29788efa68dfc4a341fd7a17a2f30\": {\"emailId\": \"1134100\", \"fileName\": \"ServiceUpgrade.default.apk\", \"fileId\": \"546130\"}, \
-                 \"f1ff967b50dad682f53289e369b4c5c23ba73da4\": {\"emailId\": \"1134172\", \"fileName\": \"ServiceUpdate.v2.apk\", \"fileId\": \"546147\"}, \
-                 \"e0332b702fed2fdf08d439a00374d6f3e81aa506\": {\"emailId\": \"1133625\", \"fileName\": \"ServiceUpgrade.v2.apk\", \"fileId\": \"545986\"}, \
-                 \"39755ed581e87d4adcabb8c09d50112fb8fe6a3f\": {\"emailId\": \"1149302\", \"fileName\": \"AndroidUpdate.default.apk\", \"fileId\": \"556521\"}\
-               },\
-              }";
+                      \"ver\": \"0.0.1\",\
+                      \"title\": \"open vaccine signature database\",\
+                      \"signatures\":\
+                      {\
+                        \"5f5fdcfc9de29788efa68dfc4a341fd7a17a2f30\": {\"emailId\": \"1134100\", \"fileName\": \"ServiceUpgrade.default.apk\", \"fileId\": \"546130\"},\
+                        \"f1ff967b50dad682f53289e369b4c5c23ba73da4\": {\"emailId\": \"1134172\", \"fileName\": \"ServiceUpdate.v2.apk\", \"fileId\": \"546147\"},\
+                        \"e0332b702fed2fdf08d439a00374d6f3e81aa506\": {\"emailId\": \"1133625\", \"fileName\": \"ServiceUpgrade.v2.apk\", \"fileId\": \"545986\"},\
+                        \"39755ed581e87d4adcabb8c09d50112fb8fe6a3f\": {\"emailId\": \"1149302\", \"fileName\": \"AndroidUpdate.default.apk\", \"fileId\": \"556521\"}\
+                      }\
+                     }";
     } else {
        data = reply->readAll();
     }
 
     qDebug() << "scanData:" << data;
 
-    QJsonDocument jdoc( QJsonDocument::fromJson(data.toUtf8()) );
+
+    QJsonParseError err;
+    QJsonDocument jdoc =  QJsonDocument::fromJson( data.toUtf8(), &err);
+
+    if(!err.error){
+        qDebug() << "scan error:" << err.errorString() ;
+    }
 
     m_scanData = jdoc.object();
 
-    qDebug() << "scanData:" << m_scanData.value("signatrues").toString();
+    qDebug() << "scanData:" << m_scanData.keys();
 
     // initialize bloom filter using sha1 signature
 
@@ -392,7 +398,6 @@ void AppModel::replyFinished(QNetworkReply *reply)
                 qDebug() << "sha1_key:" << sha1_key;
                 m_bloomFilter.insert(std::string(sha1_key.toUtf8().constData()));
             }
-
         }else{
             Q_ASSERT(false);
         }
