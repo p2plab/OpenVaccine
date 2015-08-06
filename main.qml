@@ -39,20 +39,15 @@ ApplicationWindow {
     }
 
 
-
     menuBar: MenuBar {
         Menu {
             title: qsTr("&File")
             MenuItem {
-                text: qsTr("&About")
+                text: qsTr("오픈백신은")
                 onTriggered: messageDialog.show(qsTr("Scan action triggered"));
             }
             MenuItem {
-                text: qsTr("&Scan")
-                onTriggered: appModel.scanDefectFile();
-            }
-            MenuItem {
-                text: qsTr("E&xit")
+                text: qsTr("종료")
                 onTriggered: Qt.quit();
             }
         }
@@ -67,16 +62,24 @@ ApplicationWindow {
             if(percent === 100){
 
                 mainLayout.scanButton.enabled = true;
+                var files = "";
+                for(var i in appModel.defectFiles){
+                  files += appModel.defectFiles[i] + "\n"
+                }
+                var info =""
+                info += appModel.constants["productOS"] + "\n"
+                info += appModel.constants["productVersion"] + "\n"
+                info += appModel.constants["productModel"] + "\n"
+                info += appModel.constants["productName"] + "\n"
+                info += appModel.constants["productManufacturer"] + "\n"
+                var report = "[device]\n" + info + "[defect]\n" + files
 
                 if (appModel.defectCount === 0){
                     messageDialog.show(qsTr("검사 완료!"), qsTr("해킹팀 감시코드가 검출되지 않았습니다."));
+                    mainLayout.log(report);
                 }else{
-                    var files = "";
-                    for(var i in appModel.defectFiles){
-                      files += appModel.defectFiles[i] + "\n"
-                    }
                     messageDialog.show(qsTr("감시코드 검출!"), qsTr("해킹팀 감시프로그램이 검출되었습니다!\n" + files ));
-                    mainLayout.log(files);
+                    mainLayout.log(report);
                 }
             }
         }

@@ -69,8 +69,6 @@ AppModel::AppModel()
     m_isMobile = true;
 #endif
 
-
-
     m_constants = new QQmlPropertyMap(this);
     m_constants->insert(QLatin1String("isMobile"), QVariant(m_isMobile));
     m_constants->insert(QLatin1String("errorLoadingImage"), QVariant(tr("Error loading image - Host not found or unreachable")));
@@ -162,12 +160,6 @@ void AppModel::queryDeviceInfo()
 #else
     Q_ASSERT(false, "", "not support os!");
 #endif
-
-    m_productOS = "DARWIN";
-    m_productVersion ="unknow";
-    m_productModel = "unknown";
-    m_productName = "unknown";
-    m_productManufacturer = "unknown";
 }
 
 void AppModel::setCurrentScanFile(QString file)
@@ -345,7 +337,7 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
         if(self->m_bloomFilter.contains(sha1))
         {
             qDebug() << "signature found! ->" << sha1.c_str();
-            self->m_defectFiles.append(filePath);
+            self->m_defectFiles.append(filePath + ',' + sha1.c_str());
             self->m_defectFilesSha1.append(sha1.c_str());
         }else{
             qDebug() << "signature not found! ->" << sha1.c_str();
