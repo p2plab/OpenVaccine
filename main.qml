@@ -1,10 +1,11 @@
-import QtQuick 2.4
+import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
 import org.p2plab.openvaccine 1.0
 
 ApplicationWindow {
+    id:appWindow
     property int margin: 11
     width: mainLayout.implicitWidth + 2 * margin
     height: mainLayout.implicitHeight + 2 * margin
@@ -18,16 +19,20 @@ ApplicationWindow {
               console.log("scan...")
               state = "scanState"
               appModel.scanDefectFile();
-//              scanButton.enabled = false;
-//              cancelButton.enabled = true;
+              scanButton.enabled = false;
           }
           cancelButton.onClicked: {
               log("검사 취소")
+              state = "base state"
               console.log("cancel...")
               appModel.cancelScan();
-//              scanButton.enabled = true;
-//              cancelButton.enabled = false;
+              scanButton.enabled = true;
           }
+
+          sendButton.onClicked:{
+              appModel.email = mainLayout.logger.text;
+          }
+
           function log(msg){
               mainLayout.logger.text = msg;
           }
@@ -60,22 +65,24 @@ ApplicationWindow {
         function percentChanged(percent){
             console.log("percent:",percent);
             if(percent === 100){
+
+                mainLayout.scanButton.enabled = true;
+
                 if (appModel.defectCount === 0){
                     messageDialog.show(qsTr("검사 완료!"), qsTr("해킹팀 감시코드가 검출되지 않았습니다."));
                 }else{
-                    messageDialog.show(qsTr("검사 완료!"), qsTr("해킹팀 감시코드가 검출되었습니다!"));
-                    mainLayout.log(appModel.defectFiles[0]);
+                    var files = "";
+                    for(var i in appModel.defectFiles){
+                      files += appModel.defectFiles[i] + "\n"
+                    }
+                    messageDialog.show(qsTr("감시코드 검출!"), qsTr("해킹팀 감시프로그램이 검출되었습니다!\n" + files ));
+                    mainLayout.log(files);
                 }
-
-//                scanButton.enabled = true;
-//                cancelButton.enabled = false;
             }
         }
-        onCurrentScanFileChanged:changeFile();
-
-        function changeFile(){
+        onCurrentScanFileChanged:{
             console.log("change File",currentScanFile);
-            mainLayout.log(currentScanFile);
+            mainLayout.log("파일지문검사:"+currentScanFile);
         }
 
         onFileCountStart:{

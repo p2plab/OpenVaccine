@@ -1,6 +1,20 @@
 TEMPLATE = app
 
-QT += core network positioning qml quick svg xml concurrent
+QT += core network qml quick svg xml concurrent
+
+android {
+    QT += androidextras
+
+    OTHER_FILES += \
+        android/AndroidManifest.xml
+
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libcrypto.so
+    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libssl.so
+
+    DISTFILES += \
+        android/src/org/p2plab/openvaccine/SendMail.java
+}
 
 SOURCES += main.cpp \
     appmodel.cpp \
@@ -8,12 +22,7 @@ SOURCES += main.cpp \
 
 RESOURCES += qml.qrc
 
-ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-ANDROID_EXTRA_LIBS += $$PWD/android/libs/libcrypto.so
-ANDROID_EXTRA_LIBS += $$PWD/android/libs/libssl.so
 
-OTHER_FILES += \
-    android/AndroidManifest.xml
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = components
@@ -24,4 +33,7 @@ include(deployment.pri)
 HEADERS += \
     appmodel.h \
     sha1.h \
-    bloom_filter.h
+    bloom_filter.h \
+    sendmail.h
+
+

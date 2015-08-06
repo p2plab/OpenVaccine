@@ -69,9 +69,19 @@ AppModel::AppModel()
     m_isMobile = true;
 #endif
 
+
+
     m_constants = new QQmlPropertyMap(this);
     m_constants->insert(QLatin1String("isMobile"), QVariant(m_isMobile));
     m_constants->insert(QLatin1String("errorLoadingImage"), QVariant(tr("Error loading image - Host not found or unreachable")));
+
+    queryDeviceInfo();
+
+    m_constants->insert(QLatin1String("productOS"), QVariant(m_productOS));
+    m_constants->insert(QLatin1String("productVersion"), QVariant(m_productVersion));
+    m_constants->insert(QLatin1String("productModel"), QVariant(m_productModel));
+    m_constants->insert(QLatin1String("productName"), QVariant(m_productName));
+    m_constants->insert(QLatin1String("productManufacturer"), QVariant(m_productManufacturer));
 
     manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
@@ -112,9 +122,9 @@ AppModel::AppModel()
     if (m_isMobile)
         connect(qApp->primaryScreen(), SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)), this, SLOT(notifyPortraitMode(Qt::ScreenOrientation)));
 
-    queryDeviceInfo();
+    connect(this, SIGNAL(emailChanged()),this,SLOT(updateEmail()));
 
-    queryScanData("android","2.2","Samsung", "Galuxy-5");
+    queryScanData(m_productOS,m_productVersion,m_productManufacturer, m_productModel);
 }
 
 void AppModel::queryDeviceInfo()
@@ -153,6 +163,11 @@ void AppModel::queryDeviceInfo()
     Q_ASSERT(false, "", "not support os!");
 #endif
 
+    m_productOS = "DARWIN";
+    m_productVersion ="unknow";
+    m_productModel = "unknown";
+    m_productName = "unknown";
+    m_productManufacturer = "unknown";
 }
 
 void AppModel::setCurrentScanFile(QString file)
@@ -215,13 +230,13 @@ void AppModel::queryScanData(const QString os,
 
     // http://localhost:8080/open_vaccine_api/android/2.2.1/samsung/galuxy6/scan_data
 
-    baseUrl.append(m_productOS);
+    baseUrl.append(os);
     baseUrl.append("/");
-    baseUrl.append(m_productVersion);
+    baseUrl.append(version);
     baseUrl.append("/");
-    baseUrl.append(m_productManufacturer);
+    baseUrl.append(vendor);
     baseUrl.append("/");
-    baseUrl.append(m_productModel);
+    baseUrl.append(model);
     baseUrl.append("/scan_data");
 
     QUrl searchUrl(baseUrl);
@@ -268,10 +283,17 @@ void AppModel::scanDefectFile()
     m_futureScan = QtConcurrent::run(AppModel::scanDefectFile2, this, strDirs, strFilters);
 }
 
+void AppModel::reset(){
+    m_appFiles.clear();
+    m_defectFiles.clear();
+    m_defectFilesSha1.clear();
+    setCurrentScanFile("");
+    setScanCount(0);
+}
+
 void AppModel::cancelScan(){
     m_futureScan.cancel();
-    m_appFiles.clear();
-    setScanCount(0);
+    reset();
 }
 
 void AppModel::setScanCount(int count)
@@ -286,16 +308,21 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
  {
      qDebug() << "scan Defect File" << strDirs << strFilters;
 
-     self->setScanCount(0);
-     self->m_appFiles.clear();
+     self->reset();
 
      emit(self->fileCountStart());
 
      foreach(QString dir, strDirs){
+
+         if( self->m_futureScan.isCanceled()) break;
+
          QDirIterator iterDir(dir, strFilters, QDir::Files | QDir::NoSymLinks, QDirIterator::Subdirectories);
 
          while (iterDir.hasNext())
          {
+
+            if( self->m_futureScan.isCanceled()) break;
+
             iterDir.next();
             self->m_appFiles += iterDir.filePath();
             qDebug() << "file:" << iterDir.filePath();
@@ -304,9 +331,13 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
 
      emit(self->fileCountComplete());
 
+     if( self->m_futureScan.isCanceled()) return;
+
      qDebug() << "app count:" << self->m_appFiles.length();
 
      foreach(QString filePath, self->m_appFiles){
+
+        if( self->m_futureScan.isCanceled()) break;
 
         self->setCurrentScanFile(filePath);
         std::string sha1 = SHA1::from_file(filePath.toUtf8().constData());
@@ -381,6 +412,55 @@ void AppModel::replyFinished(QNetworkReply *reply)
         reply->deleteLater();
         reply = 0;
     }
+}
+
+void AppModel::updateEmail(){
+#if defined(Q_OS_ANDROID)
+    qDebug() << "updateMessage(android)" ;
+
+//    QAndroidJniObject javaMessage = QAndroidJniObject::fromString(m_message);
+//    QAndroidJniObject::callStaticMethod<void>("org/p2plab/openvaccine/SendMail",
+//                                       "send",
+//                                       "(Ljava/lang/String;)V",
+//                                       javaMessage.object<jstring>());
+
+//http://stackoverflow.com/questions/30128718/general-share-button-on-android-in-qt-quick
+
+    QAndroidJniEnvironment _env;
+    QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative",
+                                                                           "activity",
+                                                                           "()Landroid/app/Activity;");   //activity is valid
+    if (_env->ExceptionCheck()) {
+        _env->ExceptionClear();
+        throw InterfaceConnFailedException();
+    }
+    if ( activity.isValid() )
+    {
+        QAndroidJniObject::callStaticMethod<void>("org/p2plab/openvaccine/SendMail",
+                                                  "sendText","(Landroid/app/Activity;Ljava/lang/String;)V",
+                                                  activity.object<jobject>(),
+                                                  QAndroidJniObject::fromString(m_email).object<jstring>());
+        if (_env->ExceptionCheck()) {
+            _env->ExceptionClear();
+            throw InterfaceConnFailedException();
+        }
+    }else
+        throw InterfaceConnFailedException();
+    qDebug() << "updateMessage(android)" << "SendMail.send() called!" ;
+
+#elif defined(Q_OS_WINDOWS)
+    qDebug() << "updateMessage(windows)" << m_email;
+#elif defined(Q_OS_DARWIN)
+    qDebug() << "updateMessage(osx)" << m_email;
+#else
+    Q_ASSERT(true);
+#endif
+}
+
+void AppModel::setEmail(const QString &email){
+
+    m_email = email;
+    emit emailChanged();
 }
 
 

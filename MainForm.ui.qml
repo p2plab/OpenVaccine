@@ -1,13 +1,15 @@
+
 import QtQuick 2.4
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.2
-import QtQuick.Window 2.2
 
 GridLayout {
     property alias scanButton: scanButton
     property alias cancelButton: cancelButton
+    property alias sendButton: sendButton
+
     property alias mainLayout: mainLayout
     property alias logger: logger
     property alias busyIndicator: busyIndicator
@@ -56,27 +58,25 @@ GridLayout {
         }
     }
 
-    GroupBox{
-        id: groupBox1
-        title:qsTr("검사:")
-        width:parent.width
+    TextArea {
+        id:logger
+        y: 500
         Layout.rowSpan: 2
         Layout.fillHeight: true
         Layout.fillWidth: true
-        TextArea {
-            id:logger
-            text:appModel.currentScanFile
-            anchors.fill: parent
-            activeFocusOnPress: false
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+        activeFocusOnPress: false
+
+        style:TextAreaStyle {
+            textColor: "#eee"
+            selectionColor: "steelblue"
+            selectedTextColor: "#eee"
+            backgroundColor: "#000"
         }
     }
-
     GridLayout {
         id: rowlayout4
         rows: 1
-        columns: 2
+        columns: 3
         Layout.rowSpan: 1
         Layout.fillHeight: true
         Layout.fillWidth: true
@@ -85,50 +85,56 @@ GridLayout {
             text: qsTr("검사")
             Layout.fillHeight: true
             Layout.fillWidth: true
-            //style:btnStyle
+            style: ButtonStyle {
+                background: Rectangle {
+                    border.width: control.activeFocus ? 2 : 1
+                    border.color: "#888"
+                    color: "#eee"
+                    radius: 10
+                    gradient: Gradient {
+                        GradientStop { position: 0 ; color: control.pressed ? "#ccc" : "#eee" }
+                        GradientStop { position: 1 ; color: control.pressed ? "#aaa" : "#ccc" }
+                    }
+                }
+            }
         }
         Button {
             id: cancelButton
             text: qsTr("취소")
             Layout.fillHeight: true
             Layout.fillWidth: true
-            //style:btnStyle
+            style: ButtonStyle {
+                background: Rectangle {
+                    border.width: control.activeFocus ? 2 : 1
+                    border.color: "#888"
+                    radius: 10
+                    gradient: Gradient {
+                        GradientStop { position: 0 ; color: control.pressed ? "#ccc" : "#eee" }
+                        GradientStop { position: 1 ; color: control.pressed ? "#aaa" : "#ccc" }
+                    }
+                }
+            }
+        }
+        Button {
+            id: sendButton
+            text: qsTr("신고")
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            style: ButtonStyle {
+                background: Rectangle {
+                    border.width: control.activeFocus ? 2 : 1
+                    border.color: "#888"
+                    radius: 10
+                    gradient: Gradient {
+                        GradientStop { position: 0 ; color: control.pressed ? "#ccc" : "#eee" }
+                        GradientStop { position: 1 ; color: control.pressed ? "#aaa" : "#ccc" }
+                    }
+                }
+            }
         }
     }
-    //    ButtonStyle {
-    //        id: btnStyle
-    //        background: Rectangle {
-    //            implicitWidth: 100
-    //            implicitHeight: 25
-    //            border.width: control.activeFocus ? 2 : 1
-    //            border.color: "#888"
-    //            radius: 4
-    //            gradient: Gradient {
-    //                GradientStop { position: 0 ; color: control.pressed ? "#ccc" : "#eee" }
-    //                GradientStop { position: 1 ; color: control.pressed ? "#aaa" : "#ccc" }
-    //            }
-    //        }
-    //    }
-    //    ButtonStyle {
-    //        id: btnStyle
-    //        background: Rectangle {
-    //            implicitHeight: 22
-    //            implicitWidth: window.width / columnFactor
-    //            color: control.pressed ? "darkGray" : control.activeFocus ? "#cdd" : "#ccc"
-    //            antialiasing: true
-    //            border.color: "gray"
-    //            radius: height/2
-    //            Rectangle {
-    //                anchors.fill: parent
-    //                anchors.margins: 1
-    //                color: "transparent"
-    //                antialiasing: true
-    //                visible: !control.pressed
-    //                border.color: "#aaffffff"
-    //                radius: height/2
-    //            }
-    //        }
-    //    }
+
+
     states: [
         State {
             name: "scanState"

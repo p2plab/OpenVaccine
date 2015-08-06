@@ -52,38 +52,58 @@
 #include <qtconcurrentrun.h>
 #include "bloom_filter.h"
 
+#if defined(Q_OS_ANDROID)
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QException>
+
+class InterfaceConnFailedException : public QException
+{
+public:
+    void raise() const { throw *this; }
+    InterfaceConnFailedException *clone() const { return new InterfaceConnFailedException(*this); }
+};
+#elif defined(Q_OS_WINDOWS)
+#elif defined(Q_OS_DARWIN)
+#else
+#endif
+
 
 class AppModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int applicationWidth READ applicationWidth WRITE setApplicationWidth NOTIFY applicationWidthChanged)
     Q_PROPERTY(bool isMobile READ isMobile CONSTANT)
-    Q_PROPERTY(int defectCount READ defectCount CONSTANT)
-    Q_PROPERTY(QStringList defectFiles READ defectFiles() CONSTANT)
     Q_PROPERTY(QObject *constants READ constants CONSTANT)
+
     Q_PROPERTY(bool isPortraitMode READ isPortraitMode WRITE setIsPortraitMode NOTIFY portraitModeChanged)
     Q_PROPERTY(qreal ratio READ ratio CONSTANT)
     Q_PROPERTY(qreal hMargin READ hMargin NOTIFY hMarginChanged)
     Q_PROPERTY(qreal sliderHandleWidth READ sliderHandleWidth CONSTANT)
     Q_PROPERTY(qreal sliderHandleHeight READ sliderHandleHeight CONSTANT)
     Q_PROPERTY(qreal sliderGapWidth READ sliderGapWidth CONSTANT)
+
+    Q_PROPERTY(int defectCount READ defectCount CONSTANT)
+    Q_PROPERTY(QStringList defectFiles READ defectFiles() CONSTANT)
     Q_PROPERTY(QString currentScanFile READ currentScanFile WRITE setCurrentScanFile NOTIFY currentScanFileChanged)
     Q_PROPERTY(int currentScanPercent READ currentScanPercent NOTIFY currentScanPercentChanged)
     Q_PROPERTY(NOTIFY fileCountComplete)
     Q_PROPERTY(NOTIFY fileCountStart)
+    // email
+    Q_PROPERTY(QString email READ email WRITE setEmail NOTIFY emailChanged)
+
 
 public:
     AppModel();
-
+    void reset();
     bool isMobile() const { return m_isMobile; }
+
+    QQmlPropertyMap *constants() const { return m_constants; }
+    int applicationWidth() const { return m_applicationWidth; }
+    void setApplicationWidth(const int newWidth);
 
     int defectCount() const { return m_defectFiles.length(); }
     const QStringList & defectFiles() const { return m_defectFiles; }
-
-    QQmlPropertyMap *constants() const { return m_constants; }
-
-    int applicationWidth() const { return m_applicationWidth; }
-    void setApplicationWidth(const int newWidth);
 
     QString currentScanFile() const { return m_currentScanFile; }
     void setCurrentScanFile(const QString file);
@@ -95,7 +115,6 @@ public:
 
     bool isPortraitMode() const { return m_isPortraitMode; }
     void setIsPortraitMode(const bool newMode);
-
     qreal hMargin() const { return m_hMargin; }
     qreal ratio() const { return m_ratio; }
     qreal sliderHandleHeight()  { return m_sliderHandleHeight; }
@@ -113,6 +132,15 @@ public:
                                    const QString vendor,
                                    const QString model);
     const QStringList & appFiles() { return m_appFiles; }
+
+    void setEmail(const QString &email);
+    const QString& email() const{ return m_email; }
+
+signals:
+    void emailChanged();
+
+private slots:
+    void updateEmail();
 
 protected slots:
     void notifyPortraitMode(Qt::ScreenOrientation);
@@ -143,7 +171,6 @@ private:
     qreal m_ratio;
     qreal m_hMargin;
     qreal m_sliderHandleHeight, m_sliderHandleWidth, m_sliderGapWidth;
-
     QNetworkAccessManager *manager;
 
     int m_scanCount;
@@ -160,7 +187,10 @@ private:
     QString m_productManufacturer;
 
     QFuture<void> m_futureScan;
+
     bloom_filter m_bloomFilter;
+
+    QString m_email;
 };
 
 //! [4]
