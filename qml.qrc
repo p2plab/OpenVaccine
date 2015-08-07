@@ -13,5 +13,6 @@
         <file>images/titleBar_Korean.svg</file>
         <file>images/backgroundSvg.svg</file>
         <file>images/icon.png</file>
+        <file>About.qml</file>
     </qresource>
 </RCC>

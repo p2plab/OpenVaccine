@@ -66,7 +66,7 @@ GridLayout {
         Layout.fillHeight: true
         Layout.fillWidth: true
         activeFocusOnPress: false
-
+        text: appWindow.about
         style:TextAreaStyle {
             textColor: "#eee"
             selectionColor: "steelblue"
