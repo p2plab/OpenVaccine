@@ -44,8 +44,12 @@
 #include <QtCore/QUrlQuery>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
+
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QSslConfiguration>
+#include <QtNetwork/QSsl>
+
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -218,7 +222,7 @@ void AppModel::queryScanData(const QString os,
 
     // In order to use yr.no weather data service, refer to their terms
     // and conditions of use. http://om.yr.no/verdata/free-weather-data/
-    QString baseUrl("http://dev.p2p.or.kr:8080/open_vaccine_api/");
+    QString baseUrl("https://dev.p2p.or.kr:8080/open_vaccine_api/");
 
     // http://localhost:8080/open_vaccine_api/android/2.2.1/samsung/galuxy6/scan_data
 
@@ -232,8 +236,14 @@ void AppModel::queryScanData(const QString os,
     baseUrl.append("/scan_data");
 
     QUrl searchUrl(baseUrl);
-    //manager->setConfiguration(QSslConfiguration::defaultConfiguration());
-    manager->get(QNetworkRequest(searchUrl));
+
+    QNetworkRequest req = QNetworkRequest(searchUrl);
+    QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
+    sslConfig.setProtocol(QSsl::SslV3);
+    req.setSslConfiguration(sslConfig);
+
+    manager->get(req);
+
     waitForScanDataQueryReply(tr("Waiting for scan data, network may be slow..."));
 }
 
@@ -250,15 +260,16 @@ void AppModel::scanDefectFile()
     QStringList strFilters;
 
     #if defined(Q_OS_ANDROID)
-         strFilters += "*.apk";
-         strDirs += "/";
-         //strDirs += "/system/app";
+        //strFilters += "*.apk";
+        strFilters += "*";
+        strDirs += "/";
+        //strDirs += "/system/app";
     #elif defined(Q_OS_DARWIN64)
-         strFilters += "*.apk";
-         //strDirs += "/Applications";
-         strDirs += "/Users/yezune/projects/OV/sigdb/apks";
-         //strDirs += "/usr/local";
-         //strDir = "/";
+        strFilters += "*.apk";
+        //strDirs += "/Applications";
+        strDirs += "/Users/yezune/projects/OV/sigdb/apks";
+        //strDirs += "/usr/local";
+        //strDir = "/";
     #elif defined(Q_OS_LINUX)
          strFilters += "*";
          strDirs = "/";
@@ -316,6 +327,27 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
             if( self->m_futureScan.isCanceled()) break;
 
             iterDir.next();
+            QString fn = iterDir.filePath();
+
+            if( fn.startsWith("/sys/",Qt::CaseInsensitive) ||
+                fn.startsWith("/proc/",Qt::CaseInsensitive) ||
+                fn.endsWith(".mp4",Qt::CaseInsensitive) ||
+                fn.endsWith(".3gp",Qt::CaseInsensitive) ||
+                fn.endsWith(".avi",Qt::CaseInsensitive) ||
+                fn.endsWith(".mpg",Qt::CaseInsensitive) ||
+                fn.endsWith(".mpeg",Qt::CaseInsensitive) ||
+                fn.endsWith(".mkv",Qt::CaseInsensitive) ||
+                fn.endsWith(".wmv",Qt::CaseInsensitive) ||
+                fn.endsWith(".flv",Qt::CaseInsensitive) ||
+                fn.endsWith(".jpg",Qt::CaseInsensitive) ||
+                fn.endsWith(".png",Qt::CaseInsensitive) ||
+                fn.endsWith(".flac",Qt::CaseInsensitive) ||
+                fn.endsWith(".flc",Qt::CaseInsensitive) ||
+                fn.endsWith(".ogg",Qt::CaseInsensitive) ||
+                fn.endsWith(".wma",Qt::CaseInsensitive) ||
+                fn.endsWith(".mp3",Qt::CaseInsensitive) )
+                continue;
+
             self->m_appFiles += iterDir.filePath();
             qDebug() << "file:" << iterDir.filePath();
          }
