@@ -1,5 +1,7 @@
 TEMPLATE = app
 
+CONFIG += c++11
+
 QT += core network qml quick svg xml concurrent
 
 android {
