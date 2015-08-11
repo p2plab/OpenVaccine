@@ -332,6 +332,7 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
             if( fn.startsWith("/sys/",Qt::CaseInsensitive) ||
                 fn.startsWith("/proc/",Qt::CaseInsensitive) ||
                 fn.endsWith(".mp4",Qt::CaseInsensitive) ||
+                fn.endsWith(".m4v",Qt::CaseInsensitive) ||
                 fn.endsWith(".3gp",Qt::CaseInsensitive) ||
                 fn.endsWith(".avi",Qt::CaseInsensitive) ||
                 fn.endsWith(".mpg",Qt::CaseInsensitive) ||
@@ -345,7 +346,14 @@ void AppModel::scanDefectFile2(AppModel *self, QStringList strDirs, QStringList 
                 fn.endsWith(".flc",Qt::CaseInsensitive) ||
                 fn.endsWith(".ogg",Qt::CaseInsensitive) ||
                 fn.endsWith(".wma",Qt::CaseInsensitive) ||
-                fn.endsWith(".mp3",Qt::CaseInsensitive) )
+                fn.endsWith(".mp3",Qt::CaseInsensitive) ||
+                fn.endsWith(".m4a",Qt::CaseInsensitive) ||
+                fn.endsWith(".lgu",Qt::CaseInsensitive) ||
+                fn.endsWith(".lbf",Qt::CaseInsensitive) ||
+                fn.endsWith(".dcf",Qt::CaseInsensitive) ||
+                fn.endsWith(".obb",Qt::CaseInsensitive) ||
+                fn.endsWith(".seg",Qt::CaseInsensitive) ||
+                fn.endsWith(".map",Qt::CaseInsensitive))
                 continue;
 
             self->m_appFiles += iterDir.filePath();
@@ -1117,11 +1125,6 @@ const QString & signatureString(){
           "emailId": "1149302",
           "fileName": "1149302-556520-AndroidUpdate.v2.apk",
           "fileId": "556520"
-        },
-        "72cff6b8ac2ca3a0ffe4cc5c0320c6f121e243b8": {
-          "emailId": "861098",
-          "fileName": "861098-388730-Phonesky.apk",
-          "fileId": "388730"
         },
         "026a32b7e833402d40c2c95b147ef36598931765": {
           "emailId": "955967",
