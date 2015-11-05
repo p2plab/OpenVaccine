@@ -23,7 +23,7 @@ public class SendMail extends org.qtproject.qt5.android.bindings.QtActivity
         Log.v(TAG, message);
         final String email = "openvaccine2015@gmail.com";
         final String[] mailto = new String[] { email };
-        final String subject = "[오픈 백신] 검사 리포트";
+        final String subject = "[OpenVaccine] Scan Report";
 
         try
         {
@@ -50,7 +50,7 @@ public class SendMail extends org.qtproject.qt5.android.bindings.QtActivity
             emailIntent.setType("message/rfc822");
             Log.v(TAG, "startActivity createChooser ... ");
 
-            context.startActivity(Intent.createChooser(emailIntent, "이메일 앱 선택:"));
+            context.startActivity(Intent.createChooser(emailIntent, "Choose Messaging App:"));
         }
 
         Log.v(TAG, "mail test done!");

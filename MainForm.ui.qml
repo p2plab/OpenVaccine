@@ -83,7 +83,7 @@ GridLayout {
         Layout.fillWidth: true
         Button {
             id: scanButton
-            text: qsTr("검사")
+            text: qsTr("Scan")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
@@ -101,7 +101,7 @@ GridLayout {
         }
         Button {
             id: cancelButton
-            text: qsTr("취소")
+            text: qsTr("Cancel")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
@@ -118,7 +118,7 @@ GridLayout {
         }
         Button {
             id: sendButton
-            text: qsTr("신고")
+            text: qsTr("Report")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
