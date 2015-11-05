@@ -11,14 +11,14 @@ android {
         android/AndroidManifest.xml
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libcrypto.so
-    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libssl.so
+#    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libcrypto.so
+#    ANDROID_EXTRA_LIBS += $$PWD/android/libs/libssl.so
 
     DISTFILES += \
         android/src/org/p2plab/openvaccine/SendMail.java
 
-    INCLUDEPATH +=$$PWD/ssl/include
-    LIBS += -L$$PWD/ssl/armeabi-v7a/lib/ -lssl -lcrypto
+    INCLUDEPATH +=$$PWD/ssl/android-18/include
+    LIBS += -L$$PWD/ssl/android-18/lib/ -lssl -lcrypto
 
 }
 
@@ -83,12 +83,14 @@ HEADERS += \
     appmodel.h \
     sha1.h \
     bloom_filter.h \
-    ssl/include/openssl/pkcs7.h \
-    ssl/include/openssl/evp.h \
-    ssl/include/openssl/crypto.h \
     quazip/quazip.h \
     quazip/quazipfile.h \
     quazip/quagzipfile.h \
     quazip/quaziodevice.h \
+    ssl/android-18/include/openssl/evp.h \
+    ssl/android-18/include/openssl/crypto.h \
+    ssl/android-18/include/openssl/x509.h \
+    ssl/android-18/include/openssl/pkcs7.h
+
 
 

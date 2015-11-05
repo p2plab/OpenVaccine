@@ -291,7 +291,7 @@ void BIO_clear_flags(BIO *b, int flags);
  * BIO_CB_RETURN flag indicates if it is after the call
  */
 # define BIO_CB_RETURN   0x80
-# define BIO_CB_return(a) ((a)|BIO_CB_RETURN))
+# define BIO_CB_return(a) ((a)|BIO_CB_RETURN)
 # define BIO_cb_pre(a)   (!((a)&BIO_CB_RETURN))
 # define BIO_cb_post(a)  ((a)&BIO_CB_RETURN)
 
@@ -833,6 +833,7 @@ void ERR_load_BIO_strings(void);
 # define BIO_F_CONN_CTRL                                  127
 # define BIO_F_CONN_STATE                                 115
 # define BIO_F_DGRAM_SCTP_READ                            132
+# define BIO_F_DGRAM_SCTP_WRITE                           133
 # define BIO_F_FILE_CTRL                                  116
 # define BIO_F_FILE_READ                                  130
 # define BIO_F_LINEBUFFER_CTRL                            129

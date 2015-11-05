@@ -88,8 +88,8 @@ ApplicationWindow {
             }
         }
         onCurrentScanFileChanged:{
-            console.log(qrTs("change File"),currentScanFile);
-            mainLayout.log(qrTs("Scan file signature:")+currentScanFile);
+            console.log(qsTr("change File"),currentScanFile);
+            mainLayout.log(qsTr("Scan file signature:")+currentScanFile);
         }
 
         onFileCountStart:{
