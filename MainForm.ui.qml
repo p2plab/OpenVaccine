@@ -28,6 +28,7 @@ GridLayout {
         Layout.rowSpan: 1
         Layout.fillHeight: true
         Layout.fillWidth: true
+        antialiasing: true
     }
 
     CircularGauge {
@@ -65,12 +66,12 @@ GridLayout {
         Layout.fillHeight: true
         Layout.fillWidth: true
         activeFocusOnPress: false
-
+        text: appWindow.about
         style:TextAreaStyle {
             textColor: "#eee"
             selectionColor: "steelblue"
             selectedTextColor: "#eee"
-            backgroundColor: "#000"
+            backgroundColor: "#888"
         }
     }
     GridLayout {
@@ -82,7 +83,7 @@ GridLayout {
         Layout.fillWidth: true
         Button {
             id: scanButton
-            text: qsTr("검사")
+            text: qsTr("Scan")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
@@ -100,7 +101,7 @@ GridLayout {
         }
         Button {
             id: cancelButton
-            text: qsTr("취소")
+            text: qsTr("Cancel")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
@@ -117,7 +118,7 @@ GridLayout {
         }
         Button {
             id: sendButton
-            text: qsTr("신고")
+            text: qsTr("Report")
             Layout.fillHeight: true
             Layout.fillWidth: true
             style: ButtonStyle {
@@ -133,7 +134,6 @@ GridLayout {
             }
         }
     }
-
 
     states: [
         State {

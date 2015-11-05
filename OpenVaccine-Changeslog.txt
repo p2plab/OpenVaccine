@@ -1,0 +1,23 @@
+
+
+openvaccine-changelog-1.0
+
+- SHA1 + BloomFilter이용한 파일 시그네쳐 검사
+- json data signature를 사용한 최초 버전 릴리즈
+- 파일시스템 전체에서 APK파일 검사
+
+openvaccine-changelog-1.1
+
+- 해킹팀 시그네쳐 데이타를 소스에 통합 
+
+
+openvaccine-changelog-1.2
+
+- 파일시스템 전체 검사로 변경
+- 검색에서 감염되지 않은 파일로 판단되는 시그너쳐 2개 제거
+
+openvaccine-changelog-1.3
+
+- 파일시스템 전체 검사에서 apk와 실행파일 검색으로 변경
+- 시그너처에 rooksecurity exploit signature 추가
+  (https://github.com/RookLabs/milano/blob/master/openioc/downloaded/openioc_1.1/linux_arm_1.1.ioc)
