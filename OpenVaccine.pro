@@ -19,7 +19,12 @@ android {
 
     INCLUDEPATH +=$$PWD/ssl/android-18/include
     LIBS += -L$$PWD/ssl/android-18/lib/ -lssl -lcrypto
+}
 
+macx{
+    INCLUDEPATH +=$$PWD/ssl/macosx/include
+    LIBS += -L$$PWD/ssl/macosx/lib/ -lssl -lcrypto
+    LIBS += -lz
 }
 
 INCLUDEPATH +=$$PWD/quazip
